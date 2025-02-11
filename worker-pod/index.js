@@ -1,21 +1,26 @@
-const k8s = require("@kubernetes/client-node");
-const {
-    SQSClient,
+import { KubeConfig, BatchV1Api } from "@kubernetes/client-node";
+import {
     ReceiveMessageCommand,
     DeleteMessageCommand,
-} = require("@aws-sdk/client-sqs");
+    SQSClient,
+    GetQueueAttributesCommand,
+} from "@aws-sdk/client-sqs";
 
-const kc = new k8s.KubeConfig();
+const kc = new KubeConfig();
 kc.loadFromCluster();
-const batchV1Api = kc.makeApiClient(k8s.BatchV1Api);
+const batchV1Api = kc.makeApiClient(BatchV1Api);
 
 const namespace = "hostcode";
-const capacity = 0;
+const capacity = 2;
 
 const sqsClient = new SQSClient({ region: "ap-south-1" });
 
 const triggerKubernetesJob = async (message) => {
-    const { submissionId, problemId, language } = message;
+    console.log(message);
+    const { submissionId, problemId, language } = JSON.parse(message);
+    console.log(
+        `Values are submissionId: ${submissionId}, problemId: ${problemId}`
+    );
     const job = {
         apiVersion: "batch/v1",
         kind: "Job",
@@ -54,30 +59,50 @@ const triggerKubernetesJob = async (message) => {
             },
         },
     };
-    const response = await batchV1Api.createNamespacedJob("default", jobJson);
+    console.log("Job JSON is: ", job);
+    const response = await batchV1Api.createNamespacedJob(namespace, job);
     console.log("Job created successfully:", response.body.metadata.name);
 };
 
-const startExecution = async (cnt) => {
-    const receiveCommand = new ReceiveMessageCommand({
-        QueueUrl:
-            "https://sqs.us-east-1.amazonaws.com/123456789012/your-queue-name",
-        MaxNumberOfMessages: cnt, // Number of messages to retrieve (1 to 10)
-        WaitTimeSeconds: 10, // Long polling time (max 20 seconds)
-    });
-    const response = await sqsClient.send(receiveCommand);
-    if (response.Messages) {
-        console.log(`Received ${response.Messages.length} messages.`);
-        for (const message of response.Messages) {
-            console.log("Message Body:", message.Body);
+const deleteSQSMessage = async (receiptHandle) => {
+    try {
+        console.log("Deleting message");
+        await sqsClient.send(
+            new DeleteMessageCommand({
+                QueueUrl:
+                    "https://sqs.ap-south-1.amazonaws.com/159284330056/hostcode-worker",
+                ReceiptHandle: receiptHandle,
+            })
+        );
+    } catch (e) {
+        console.log("Error occured while deleting message:", e);
+    }
+};
 
-            // Process the message (custom logic here)
-            await triggerKubernetesJob(message.Body);
-            // Delete the message after processing
-            await deleteMessage(message.ReceiptHandle);
+const startExecution = async (cnt) => {
+    try {
+        console.log("Polling for messages ...");
+        const receiveCommand = new ReceiveMessageCommand({
+            QueueUrl:
+                "https://sqs.ap-south-1.amazonaws.com/159284330056/hostcode-worker",
+            MaxNumberOfMessages: cnt,
+            WaitTimeSeconds: 0,
+        });
+        const response = await sqsClient.send(receiveCommand);
+        if (response.Messages) {
+            console.log(`Received ${response.Messages.length} messages.`);
+            for (const message of response.Messages) {
+                console.log("Message Body:", message.Body);
+
+                await triggerKubernetesJob(message.Body);
+                // Deleting the message after processing
+                await deleteSQSMessage(message.ReceiptHandle);
+            }
+        } else {
+            console.log("No messages received.");
         }
-    } else {
-        console.log("No messages received.");
+    } catch (e) {
+        console.log("Error occured while polling messages: ", e);
     }
 };
 
@@ -90,19 +115,8 @@ const listRunningJobsByNamespace = async () => {
 
         let runningJobsCnt = 0;
         // Filter and display running jobs
-        jobs.forEach((job) => {
-            const jobName = job.metadata.name;
-            const conditions = job.status.conditions || [];
-            const isRunning = conditions.some(
-                (condition) =>
-                    condition.type === "Complete" &&
-                    condition.status === "False"
-            );
-
-            if (isRunning) {
-                console.log(`- Job Name: ${jobName}`);
-                runningJobsCnt++;
-            }
+        const runningJobs = jobs.filter((job) => {
+            return job.status.active && job.status.active > 0;
         });
         return runningJobsCnt;
     } catch (error) {
@@ -111,13 +125,15 @@ const listRunningJobsByNamespace = async () => {
 };
 
 const startProcess = async () => {
-    const jobsCnt = await listRunningJobsByNamespace();
+    // const jobsCnt = await listRunningJobsByNamespace();
+    const jobsCnt = 0;
     const toBeRun = capacity - jobsCnt;
     if (toBeRun > 0) {
         await startExecution(toBeRun);
     }
 };
 
+// startProcess()
 setInterval(() => {
     startProcess();
 }, 1 * 60 * 1000);
