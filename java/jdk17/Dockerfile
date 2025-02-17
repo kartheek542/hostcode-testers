@@ -9,5 +9,5 @@ WORKDIR /hostcode
 COPY ./run-test.sh run-test.sh
 RUN chmod +x /hostcode/run-test.sh
 
-# CMD ["sh", "/hostcode/run-test.sh"]
+CMD ["sh", "/hostcode/run-test.sh"]
 
