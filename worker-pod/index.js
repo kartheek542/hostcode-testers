@@ -125,15 +125,20 @@ const listRunningJobsByNamespace = async () => {
 };
 
 const startProcess = async () => {
-    // const jobsCnt = await listRunningJobsByNamespace();
-    const jobsCnt = 0;
+    const jobsCnt = await listRunningJobsByNamespace();
+    // const jobsCnt = 0;
+    console.log("Current running jobs are", jobsCnt);
     const toBeRun = capacity - jobsCnt;
     if (toBeRun > 0) {
+        console.log("executing", toBeRun);
         await startExecution(toBeRun);
+    } else {
+        console.log("Queue is currently full");
     }
 };
 
 // startProcess()
 setInterval(() => {
+    console.log("Starting the Worker Pod");
     startProcess();
 }, 1 * 60 * 1000);
