@@ -108,6 +108,7 @@ const startExecution = async (cnt) => {
 
 const listRunningJobsByNamespace = async () => {
     try {
+        console.log("Namespace is", namespace)
         const response = await batchV1Api.listNamespacedJob(namespace);
         const jobs = response.body.items;
 
