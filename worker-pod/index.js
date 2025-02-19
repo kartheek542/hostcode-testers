@@ -111,7 +111,8 @@ const listRunningJobsByNamespace = async () => {
     console.log("Namespace is", namespace);
     console.log("batchV1Api is", batchV1Api);
     const response = await batchV1Api.listNamespacedJob({ namespace });
-    console.log(response);
+    console.log("Response is",response);
+    console.log("typeof response is",typeof(response));
     const jobs = response.body.items;
 
     console.log(`Running Kubernetes Jobs in Namespace: ${namespace}`);
