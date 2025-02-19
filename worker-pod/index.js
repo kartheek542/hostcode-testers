@@ -109,10 +109,20 @@ const startExecution = async (cnt) => {
 const listRunningJobsByNamespace = async () => {
   try {
     console.log("Namespace is", namespace);
-    console.log("batchV1Api is", batchV1Api);
+    // console.log("batchV1Api is", batchV1Api);
     const response = await batchV1Api.listNamespacedJob({ namespace });
+    console.log("----------")
     console.log("Response is",response);
     console.log("typeof response is",typeof(response));
+    console.log("----------")
+    console.log("Response body is",response.body);
+    console.log("----------")
+    console.log("Properties of response");
+    Object.keys(response).forEach((prop)=> console.log(prop));
+    console.log("----------")
+    console.log("Properties of response");
+    Object.keys(response.body).forEach((prop)=> console.log(prop));
+    console.log("----------")
     const jobs = response.body.items;
 
     console.log(`Running Kubernetes Jobs in Namespace: ${namespace}`);
