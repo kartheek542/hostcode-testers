@@ -60,7 +60,7 @@ const triggerKubernetesJob = async (message) => {
     },
   };
   console.log("Job JSON is: ", job);
-  const response = await batchV1Api.createNamespacedJob(namespace, job);
+  const response = await batchV1Api.createNamespacedJob({namespace, body: job});
   console.log("Job created successfully:", response.body.metadata.name);
 };
 
