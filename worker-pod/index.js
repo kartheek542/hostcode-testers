@@ -109,21 +109,18 @@ const startExecution = async (cnt) => {
 const listRunningJobsByNamespace = async () => {
   try {
     const response = await batchV1Api.listNamespacedJob({ namespace });
-    console.log("----------");
-    console.log("response >>>", response);
-    console.log("----------");
-    console.dir(response, { depth: null });
-    console.log("----------");
     const jobs = response.items;
 
     console.log(`Running Kubernetes Jobs in Namespace: ${jobs}`);
 
     let runningJobsCnt = 0;
     // Filter and display running jobs
-    const runningJobs = jobs.filter((job) => {
+    const runningJobs = jobs.forEach((job) => {
       console.log("----------");
       console.log("Job status obj is >>>", job.status);
-      return job.status.active && job.status.active > 0;
+      if(job.status.active && job.status.active > 0) {
+        runningJobs++;
+      }
     });
     return runningJobsCnt;
   } catch (error) {
