@@ -1,4 +1,8 @@
-import { KubeConfig, BatchV1Api, KubernetesObjectApi } from "@kubernetes/client-node";
+import {
+  KubeConfig,
+  BatchV1Api,
+  KubernetesObjectApi,
+} from "@kubernetes/client-node";
 import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
@@ -71,8 +75,17 @@ const triggerKubernetesJob = async (message) => {
     },
   };
   console.log("Job JSON is: ");
-  console.dir(job, { depth: null });
-  const response = await k8sApi.patch(job);
+  console.log(JSON.stringify(job));
+  try {
+    const response = await k8sApi.patch(job);
+    console.log("Successfully triggered kubernetes job");
+    console.log("Response is ");
+    console.dir(response, { depth: null });
+    console.log("Job created successfully:", response.body.metadata.name);
+  } catch (e) {
+    console.log("Error occured while creating job: ", e);
+  }
+  console.log("Job created successfully:", response);
   console.log("Job created successfully:", response.body.metadata.name);
 };
 
