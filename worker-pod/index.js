@@ -70,7 +70,8 @@ const triggerKubernetesJob = async (message) => {
       },
     },
   };
-  console.log("Job JSON is: ", job);
+  console.log("Job JSON is: ");
+  console.dir(job, { depth: null });
   const response = await k8sApi.patch(job);
   console.log("Job created successfully:", response.body.metadata.name);
 };
