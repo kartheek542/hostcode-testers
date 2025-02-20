@@ -1,4 +1,4 @@
-import { KubeConfig, BatchV1Api } from "@kubernetes/client-node";
+import { KubeConfig, BatchV1Api, KubernetesObjectApi } from "@kubernetes/client-node";
 import {
   ReceiveMessageCommand,
   DeleteMessageCommand,
@@ -9,6 +9,7 @@ import {
 const kc = new KubeConfig();
 kc.loadFromCluster();
 const batchV1Api = kc.makeApiClient(BatchV1Api);
+const k8sApi = KubernetesObjectApi.makeApiClient(kc);
 
 const namespace = "hostcode";
 const capacity = 2;
@@ -70,10 +71,7 @@ const triggerKubernetesJob = async (message) => {
     },
   };
   console.log("Job JSON is: ", job);
-  const response = await batchV1Api.createNamespacedJob({
-    namespace,
-    body: job,
-  });
+  const response = await k8sApi.patch(job);
   console.log("Job created successfully:", response.body.metadata.name);
 };
 
