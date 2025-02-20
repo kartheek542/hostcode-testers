@@ -115,11 +115,11 @@ const listRunningJobsByNamespace = async () => {
 
     let runningJobsCnt = 0;
     // Filter and display running jobs
-    const runningJobs = jobs.forEach((job) => {
+    jobs.forEach((job) => {
       console.log("----------");
       console.log("Job status obj is >>>", job.status);
       if(job.status.active && job.status.active > 0) {
-        runningJobs++;
+        runningJobsCnt++;
       }
     });
     return runningJobsCnt;
