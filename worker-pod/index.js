@@ -77,7 +77,7 @@ const triggerKubernetesJob = async (message) => {
   console.log("Job JSON is: ");
   console.log(JSON.stringify(job));
   try {
-    const response = await k8sApi.patch(job);
+    const response = await k8sApi.create(job);
     console.log("Successfully triggered kubernetes job");
     console.log("Response is ");
     console.dir(response, { depth: null });
