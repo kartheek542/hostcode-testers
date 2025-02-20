@@ -85,8 +85,6 @@ const triggerKubernetesJob = async (message) => {
   } catch (e) {
     console.log("Error occured while creating job: ", e);
   }
-  console.log("Job created successfully:", response);
-  console.log("Job created successfully:", response.body.metadata.name);
 };
 
 const deleteSQSMessage = async (receiptHandle) => {
