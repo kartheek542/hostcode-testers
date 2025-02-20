@@ -37,11 +37,21 @@ const triggerKubernetesJob = async (message) => {
               env: [
                 {
                   name: "AWS_ACCESS_KEY_ID",
-                  value: process.env.AWS_ACCESS_KEY_ID,
+                  valueFrom: {
+                    secretKeyRef: {
+                      name: "my-aws-credentials",
+                      key: "aws_access_key_id",
+                    },
+                  },
                 },
                 {
                   name: "AWS_SECRET_ACCESS_KEY",
-                  value: process.env.AWS_SECRET_ACCESS_KEY,
+                  valueFrom: {
+                    secretKeyRef: {
+                      name: "my-aws-credentials",
+                      key: "aws_secret_access_key",
+                    },
+                  },
                 },
                 {
                   name: "S3_tests",
@@ -60,7 +70,10 @@ const triggerKubernetesJob = async (message) => {
     },
   };
   console.log("Job JSON is: ", job);
-  const response = await batchV1Api.createNamespacedJob({namespace, body: job});
+  const response = await batchV1Api.createNamespacedJob({
+    namespace,
+    body: job,
+  });
   console.log("Job created successfully:", response.body.metadata.name);
 };
 
@@ -118,7 +131,7 @@ const listRunningJobsByNamespace = async () => {
     jobs.forEach((job) => {
       console.log("----------");
       console.log("Job status obj is >>>", job.status);
-      if(job.status.active && job.status.active > 0) {
+      if (job.status.active && job.status.active > 0) {
         runningJobsCnt++;
       }
     });
