@@ -22,7 +22,7 @@ const sqsClient = new SQSClient({ region: "ap-south-1" });
 
 const triggerKubernetesJob = async (message) => {
   console.log(message);
-  const { submissionId, problemId, language } = JSON.parse(message);
+  const { submissionId, problemId, languageId } = JSON.parse(message);
   console.log(
     `Values are submissionId: ${submissionId}, problemId: ${problemId}`
   );
@@ -38,7 +38,7 @@ const triggerKubernetesJob = async (message) => {
           containers: [
             {
               name: "submission-container",
-              image: `docker.io/kartheek542/hostcode:tester-${language}`,
+              image: `docker.io/kartheek542/hostcode:tester-${languageId}`,
               env: [
                 {
                   name: "AWS_ACCESS_KEY_ID",
@@ -64,7 +64,7 @@ const triggerKubernetesJob = async (message) => {
                 },
                 {
                   name: "SUBMISSION",
-                  value: `s3://hostcode-terraform-backend/hostcode-problems/${problemId}/submissions/${language}/${submissionId}`,
+                  value: `s3://hostcode-terraform-backend/hostcode-problems/${problemId}/submissions/${languageId}/${submissionId}`,
                 },
               ],
             },
@@ -79,9 +79,6 @@ const triggerKubernetesJob = async (message) => {
   try {
     const response = await k8sApi.create(job);
     console.log("Successfully triggered kubernetes job");
-    console.log("Response is ");
-    console.dir(response, { depth: null });
-    console.log("Job created successfully:", response.body.metadata.name);
   } catch (e) {
     console.log("Error occured while creating job: ", e);
   }
